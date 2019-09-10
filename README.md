@@ -50,3 +50,24 @@ $ passenger-app <app> restart
 $ passenger-app <app> status [<args>]
 $ passenger-app <app> config <args>
 ```
+## Running each app under its own account
+
+To separate multiple applications from each others files, use:
+```
+# systemctl edit passenger@APPNAME
+```
+and make sure the override.conf reads:
+```
+[Service]
+User=myapp
+Group=myapp
+```
+
+You can also pass environment variables to your app using this
+approach:
+```
+[Service]
+Environment="SECRET=r1na5GWpNf052syOhHlUSM1bgmFL0I"
+```
+
+(generate your own secret using a tool like `tr -cd '[:alnum:]' < /dev/urandom | fold -w30 | head -n1`)

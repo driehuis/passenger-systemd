@@ -16,17 +16,31 @@ Commands:
 EOD
 }
 
+# These files can override the default settings. They can also set
+# environment values like PATH and GEM_HOME. The default for
+# ruby_switcher is rbfu for backward compatibility with the
+# original distribution of passenger-systemd. Set ruby_switcher
+# to "none" to rely on the PATH setting alone.
+[ -e /etc/passenger-app.rc ] && . /etc/passenger-app.rc
+[ -e $HOME/.passenger-app.rc ] && . $HOME/.passenger-app.rc
+
+if [ -z "$ruby_switcher" ]; then
+    ruby_switcher="rbfu"
+elif [ "$ruby_switcher" = "none" ]; then
+    ruby_switcher=""
+fi
+
 config() {
-  exec rbfu passenger-config "$@"
+  exec $ruby_switcher passenger-config "$@"
 }
 
 status() {
-  exec rbfu passenger-status "$@"
+  exec $ruby_switcher passenger-status "$@"
 }
 
 start() {
   cd "$APPDIR"
-  exec rbfu passenger start current --daemonize --instance-registry-dir ${PASSENGER_INSTANCE_REGISTRY_DIR} --engine builtin --socket ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.sock --pid-file ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.pid --log-file ${APPDIR}/shared/log/passenger.log --environment production
+  exec $ruby_switcher passenger start current --daemonize --instance-registry-dir ${PASSENGER_INSTANCE_REGISTRY_DIR} --engine builtin --socket ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.sock --pid-file ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.pid --log-file ${APPDIR}/shared/log/passenger.log --environment production
 }
 
 reload() {
@@ -34,12 +48,12 @@ reload() {
 }
 
 stop() {
-  exec rbfu passenger stop --pid-file ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.pid
+  exec $ruby_switcher passenger stop --pid-file ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.pid
 }
 
 restart() {
   echo "Shutting down application ..."
-  rbfu passenger stop --pid-file ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.pid
+  $ruby_switcher passenger stop --pid-file ${PASSENGER_INSTANCE_REGISTRY_DIR}/app.pid
   sleep 5
   start
 }
